@@ -14,7 +14,6 @@ exports.headers = headers = {
 exports.serveAssets = function(res, asset, callback) {
   // Write some code here that helps serve up your static files!
   // (Static files are things like html (yours or archived from others...), css, or anything that doesn't change often.)
-
   if(asset) {
     fs.readFile(asset, "binary", function(err, file) {
       if (err) {
@@ -29,21 +28,54 @@ exports.serveAssets = function(res, asset, callback) {
   }
 };
 
+var addtoArchive = function(url, res) {
+  // if not, add it to archive list
+  fs.appendFile(archive.paths.list, url + '\n', function(err){
+    if(err){
+      console.log(err);
+    } else {
+      console.log(url, 'Added to sites.txt')
+    }
+  });
+  // adding the currentUrl from POST request to the archives URL list
+  archive.urlList['/' + url] = './archives/sites/' + url;
+  exports.serveAssets(res, './web/public/loading.html');
+}
+
 var handleGETRequests = function(req, res){
   var archiveUrl = archive.urlList[req.url];
-  if(req.headers['referer']){
-    var hostname = req.headers['referer'].split('8080/')[1];
-    archiveUrl = "http://" + hostname + req.url;
-    res.writeHead(302, {'Location': archiveUrl});
-    res.end();
-  } else {
+  // if(req.headers['referer']){
+  //   var hostname = req.headers['referer'].split('8080/')[1];
+  //   archiveUrl = "http://" + hostname + req.url;
+  //   res.writeHead(302, {'Location': archiveUrl});
+  //   res.end();
+  // } else {
     exports.serveAssets(res, archiveUrl);
-  }
+  // }
 };
 
 var handlePOSTRequests = function(req, res){
-  res.writeHead(200, headers);
-  res.end(); // should eventually be html of request url
+  // open the sites.txt
+  var urlString = "";
+
+  // on 'data' handler
+  req.on('data', function(chunk){
+    // var += data
+    urlString += chunk;
+  });
+
+  // on 'end'
+  req.on('end', function(){
+    var currentUrl = urlString.split('=')[1];
+    // check if site is archived
+    if ( archive.urlList['/' + currentUrl] ) {
+      res.writeHead(200, headers);
+      res.end("That site already exists in the archives");
+      // exports.serveAssets(res, archive.urlList['/' + currentUrl]);
+    } else {
+      addtoArchive(currentUrl, res);
+    }
+  });
 };
 
 var handleOPTIONSRequests = function(req, res){
