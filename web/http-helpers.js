@@ -1,6 +1,7 @@
 var path = require('path');
 var fs = require('fs');
 var archive = require('../helpers/archive-helpers');
+var url = require('url')
 
 exports.headers = headers = {
   "access-control-allow-origin": "*",
@@ -13,43 +14,42 @@ exports.headers = headers = {
 exports.serveAssets = function(res, asset, callback) {
   // Write some code here that helps serve up your static files!
   // (Static files are things like html (yours or archived from others...), css, or anything that doesn't change often.)
-};
 
-var serveHTML = function(req, res) {
-  // var newPath = path.resolve(".", "web/public/index.html");
-  // console.log(newPath);
-  fs.readFile('./web/public/index.html', "binary", function(err, file) {
-    if (err) {
-      console.log(err);
-    }
-
-    console.log("buffer to string: ", file);
-    res.writeHead(200, headers);
-    res.end(file);
-  });
-
+  if(asset) {
+    fs.readFile(asset, "binary", function(err, file) {
+      if (err) {
+        console.log(err);
+      }
+      res.writeHead(200, headers);
+      res.end(file);
+    });
+  } else {
+    res.writeHead(404, headers);
+    res.end();
+  }
 };
 
 var handleGETRequests = function(req, res){
-  res.writeHead(200, headers);
-  if(req.url === "/") {
-    // serve up index.html
-    serveHTML(req, res);
+  var archiveUrl = archive.urlList[req.url];
+  if(req.headers['referer']){
+    var hostname = req.headers['referer'].split('8080/')[1];
+    archiveUrl = "http://" + hostname + req.url;
+    res.writeHead(302, {'Location': archiveUrl});
+    res.end();
   } else {
-  res.end();
+    exports.serveAssets(res, archiveUrl);
   }
- // should eventually be html of request url
-}
+};
 
 var handlePOSTRequests = function(req, res){
   res.writeHead(200, headers);
   res.end(); // should eventually be html of request url
-}
+};
 
 var handleOPTIONSRequests = function(req, res){
   res.writeHead(200, headers);
   res.end(); // should eventually be html of request url
-}
+};
 
 exports.requestMap = {
   'GET': handleGETRequests,

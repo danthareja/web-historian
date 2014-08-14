@@ -9,7 +9,11 @@ var _ = require('underscore');
  * customize it in any way you wish.
  */
 
-exports.urlList = ['www.google.com'];
+// eventually path these links out
+exports.urlList = {
+  '/': './web/public/index.html',
+  '/www.google.com': './archives/sites/www.google.com'
+};
 
 exports.paths = {
   'siteAssets' : path.join(__dirname, '../web/public'),
