@@ -10,7 +10,7 @@ var path = require('path');
 // scrape html of each site
 // save in sites/*sitename*
 
-exports.fetch = function() {
+var fetch = function() {
   // Read list of urls in sites.txt
   archive.readListOfUrls(function(urlArray){
     // Iterate over each url in the list
@@ -34,6 +34,22 @@ exports.fetch = function() {
     });
   });
 };
+
+setTimeout(fetch, 2000);
+
+/********************************* CRONTAB - every minute ********************
+in terminal, run crontab -e
+copy this line:
+* * * * * /Users/student/.nvm/v0.10.26/bin/node /Users/student/Code/Jeff_VanDalsum/2014-07-web-historian/workers/htmlfetcher.js
+
+first argument: time
+second argument: absolute path to node
+third argument: absolute path of script to run
+
+???
+profit
+
+************************************************************************************/
 
 
 

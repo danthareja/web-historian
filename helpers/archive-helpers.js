@@ -65,7 +65,7 @@ exports.isURLArchived = function(url, callback){
 };
 
 /************** Note: This is currently what's calling our fetch function */
-htmlfetcher.fetch();
+// htmlfetcher.fetch();
 
 exports.downloadUrls = function(){
 };
