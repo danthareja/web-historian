@@ -14,8 +14,14 @@ exports.headers = headers = {
 exports.serveAssets = function(res, asset, callback) {
   // Write some code here that helps serve up your static files!
   // (Static files are things like html (yours or archived from others...), css, or anything that doesn't change often.)
+  var assetUrl;
+  if(asset === "/"){
+    assetUrl = './web/public/index.html';
+  } else {
+    assetUrl = path.join(__dirname, '../archives/sites/', asset);
+  }
   if(asset) {
-    fs.readFile(asset, "binary", function(err, file) {
+    fs.readFile(assetUrl, "binary", function(err, file) {
       if (err) {
         console.log(err);
       }
@@ -43,14 +49,15 @@ var addtoArchive = function(url, res) {
 }
 
 var handleGETRequests = function(req, res){
-  var archiveUrl = archive.urlList[req.url];
+  //var archiveUrl = archive.urlList[req.url];
   // if(req.headers['referer']){
   //   var hostname = req.headers['referer'].split('8080/')[1];
   //   archiveUrl = "http://" + hostname + req.url;
   //   res.writeHead(302, {'Location': archiveUrl});
   //   res.end();
   // } else {
-    exports.serveAssets(res, archiveUrl);
+  //  exports.serveAssets(res, archiveUrl);
+   exports.serveAssets(res, req.url);
   // }
 };
 
