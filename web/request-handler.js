@@ -6,7 +6,4 @@ var helpers = require('./http-helpers');
 exports.handleRequest = function (req, res) {
   console.log("Serving ", req.method, " for url ", req.url);
   helpers.requestMap[req.method](req, res);
-
-  // helpers.requestMap[req.method](req, res);
-  // res.end(archive.paths.list);
 };

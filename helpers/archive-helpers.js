@@ -10,12 +10,6 @@ var htmlfetcher = require('../workers/htmlfetcher');
  * customize it in any way you wish.
  */
 
-// eventually path these links out
-exports.urlList = {
-  '/': './web/public/index.html',
-  '/www.google.com': './archives/sites/www.google.com'
-};
-
 exports.paths = {
   'siteAssets' : path.join(__dirname, '../web/public'),
   'archivedSites' : path.join(__dirname, '../archives/sites'),
@@ -32,21 +26,32 @@ exports.initialize = function(pathsObj){
 // The following function names are provided to you to suggest how you might
 // modularize your code. Keep it clean!
 
+// Reads urls and passes array of urls to callback
 exports.readListOfUrls = function(callback){
   var urls = [];
+  // Looking in directory /archives/sites.txt for all files
   fs.readFile(exports.paths.list, function(err, data){
+    // transform string of sites to array
     urls = data.toString().split("\n");
-    console.log(urls.length-1);
     callback(urls.slice(0, urls.length));
   });
 };
 
-exports.isUrlInList = function(){
+// Checks if any given url is in /archives/sites.txt and passes true or false to callback
+exports.isUrlInList = function(url, callback){
+  exports.readListOfUrls(function(urlList){
+    if(urlList.indexOf(url) < 0){
+      callback(false);
+    } else {
+      callback(true);
+    }
+  })
 };
 
 exports.addUrlToList = function(){
 };
 
+// Checks if any given url has been archived in /archives/sites and passes true or false to callback
 exports.isURLArchived = function(url, callback){
   fs.readdir( path.join(__dirname, '../archives/sites' ), function(err, arr){
     var isArchived = false;
@@ -59,6 +64,7 @@ exports.isURLArchived = function(url, callback){
   });
 };
 
+/************** Note: This is currently what's calling our fetch function */
 htmlfetcher.fetch();
 
 exports.downloadUrls = function(){

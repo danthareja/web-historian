@@ -10,37 +10,30 @@ var path = require('path');
 // scrape html of each site
 // save in sites/*sitename*
 
-// readListOfUrls
 exports.fetch = function() {
+  // Read list of urls in sites.txt
   archive.readListOfUrls(function(urlArray){
-    console.log('in readlist, urlArray is ')
+    // Iterate over each url in the list
     urlArray.forEach(function(urlItem){
-      console.log('in for each, item is: ', urlItem);
-      archive.isURLArchived(urlItem, function(isArchived){
-        if(!isArchived){
-          console.log(urlItem);
-          console.log(path.join(__dirname, '../archives/sites/', urlItem));
-          request('http://' + urlItem, function(err, res, html) {
-            fs.writeFile(path.join(__dirname, '../archives/sites/', urlItem), html, function(err) {
-              if (err) {console.log(err);}
+      // If url is not blank (last item in sites.txt file is always blank)
+      if (urlItem !== "") {
+        // Check if the current url is archived
+        archive.isURLArchived(urlItem, function(isArchived){
+          // If not, archived:
+          if(!isArchived){
+            // Scrape the file:
+            request('http://' + urlItem, function(err, res, html) {
+              // Write the contents of the scrape to /archives/sites (a new file will be created with the url name)
+              fs.writeFile(path.join(__dirname, '../archives/sites/', urlItem), html, function(err) {
+                if (err) {console.log(err);}
+              });
             });
-          });
-          // .pipe(fs.createWriteStream(path.join(__dirname, '../archives/sites/', urlItem)));
-        }
-      });
+          }
+        });
+      }
     });
   });
 };
-  // in the callback (which is an array of the sites.txt file)
-    // for each url in that array, call isURLArchived (passing in current url)
-      // in that callback
-        // if false, request => pipe => file
-
-
-/*        request('http://www.google.com', function(err, res, html){
-          console.log("html: ", html);  // scraper data
-        });
-*/
 
 
 
