@@ -11,6 +11,16 @@ exports.headers = headers = {
   'Content-Type': "text/html"
 };
 
+var sendHtml = function(res, assetUrl){
+  fs.readFile(assetUrl, "binary", function(err, file) {
+    if (err) {
+      console.log(err);
+    }
+    res.writeHead(200, headers);
+    res.end(file);
+  });
+};
+
 exports.serveAssets = function(res, asset, callback) {
   // Write some code here that helps serve up your static files!
   // (Static files are things like html (yours or archived from others...), css, or anything that doesn't change often.)
@@ -18,26 +28,26 @@ exports.serveAssets = function(res, asset, callback) {
   /* Changes: set a default asset url
   This no longer uses the object we created on archive-helpers but instead
     creates a dynamic pathing from current dir to the asset (url) passed in */
-  var assetUrl;
+  var assetUrl = undefined;
   if(asset === "/"){
     assetUrl = './web/public/index.html';
+    sendHtml(res, assetUrl);
   } else if(asset === 'loading.html') {
     assetUrl = './web/public/loading.html';
+    sendHtml(res, assetUrl);
   } else {
-    assetUrl = path.join(__dirname, '../archives/sites/', asset);
-  }
-
-  if(asset) {
-    fs.readFile(assetUrl, "binary", function(err, file) {
-      if (err) {
-        console.log(err);
+    asset = asset.slice(1);
+    archive.isUrlInList(asset, function(isInList){
+      console.log(isInList);
+      console.log("Asset is: ", asset);
+      if(isInList){
+        assetUrl = path.join(__dirname, '../archives/sites/', asset);
+        sendHtml(res, assetUrl);
+      } else {
+        res.writeHead(404, headers);
+        res.end("404 file not found");
       }
-      res.writeHead(200, headers);
-      res.end(file);
-    });
-  } else {
-    res.writeHead(404, headers);
-    res.end();
+    })
   }
 };
 
