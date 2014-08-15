@@ -1,7 +1,11 @@
 var path = require('path');
 var fs = require('fs');
 var archive = require('../helpers/archive-helpers');
-var url = require('url')
+var url = require('url');
+
+var databaseUrl = "sitesdb";
+var collections = ['sites'];
+var db = require('mongojs').connect(databaseUrl, collections);
 
 exports.headers = headers = {
   "access-control-allow-origin": "*",
@@ -11,7 +15,7 @@ exports.headers = headers = {
   'Content-Type': "text/html"
 };
 
-var sendHtml = function(res, assetUrl){
+var sendPublicHtml = function(res, assetUrl){
   fs.readFile(assetUrl, "binary", function(err, file) {
     if (err) {
       console.log(err);
@@ -21,6 +25,14 @@ var sendHtml = function(res, assetUrl){
   });
 };
 
+var sendDbHtml = function(res, urlAsset) {
+  db.sites.find({name: urlAsset}, function(err, data) {
+    res.writeHead(200, headers);
+    console.log(data[0].html);
+    res.end(data[0].html);
+  });
+}
+
 exports.serveAssets = function(res, asset, callback) {
   // Write some code here that helps serve up your static files!
   // (Static files are things like html (yours or archived from others...), css, or anything that doesn't change often.)
@@ -29,39 +41,41 @@ exports.serveAssets = function(res, asset, callback) {
   This no longer uses the object we created on archive-helpers but instead
     creates a dynamic pathing from current dir to the asset (url) passed in */
   var assetUrl = undefined;
+
+  // Handle public routes
   if(asset === "/"){
     assetUrl = './web/public/index.html';
-    sendHtml(res, assetUrl);
-  } else if(asset === 'loading.html') {
+    sendPublicHtml(res, assetUrl);
+  } else if (asset === '/loading.html') {
     assetUrl = './web/public/loading.html';
-    sendHtml(res, assetUrl);
+    sendPublicHtml(res, assetUrl);
+
+  // Handle db routes
   } else {
-    asset = asset.slice(1);
-    archive.isUrlInList(asset, function(isInList){
-      console.log(isInList);
-      console.log("Asset is: ", asset);
-      if(isInList){
-        assetUrl = path.join(__dirname, '../archives/sites/', asset);
-        sendHtml(res, assetUrl);
+    // Check if db url is scraped
+    var urlAsset = asset.slice(1);
+    archive.isUrlScraped(urlAsset, function(isScraped) {
+      if (isScraped) {
+        sendDbHtml(res, urlAsset) //Make this function!!
+      // If not, 404
       } else {
         res.writeHead(404, headers);
         res.end("404 file not found");
       }
-    })
+    });
   }
-};
+}
 
 var addtoArchive = function(url, res) {
-  // if not, add it to archive list
-  fs.appendFile(archive.paths.list, url + '\n', function(err){
-    if(err){
-      console.log(err);
-    } else {
-      console.log(url, 'Added to sites.txt')
-    }
-  });
+ db.sites.insert({name: url, html: '', isScraped: false}, function(err){
+  if(err){
+    console.log("something happened");
+  }
+  console.log('database insert complete')
+ });
+
   exports.serveAssets(res, 'loading.html');
-}
+};
 
 var handleGETRequests = function(req, res){
  exports.serveAssets(res, req.url);

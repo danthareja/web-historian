@@ -9,6 +9,11 @@ var path = require('path');
 // Check sites.txt for new sites
 // scrape html of each site
 // save in sites/*sitename*
+//
+var databaseUrl = "sitesdb";
+var collections = ['sites'];
+var db = require('mongojs').connect(databaseUrl, collections);
+
 
 var fetch = function() {
   // Read list of urls in sites.txt
@@ -23,6 +28,7 @@ var fetch = function() {
           if(!isArchived){
             // Scrape the file:
             request('http://' + urlItem, function(err, res, html) {
+              db.sites.save({name: urlItem, html: html, isScarped: true});
               // Write the contents of the scrape to /archives/sites (a new file will be created with the url name)
               fs.writeFile(path.join(__dirname, '../archives/sites/', urlItem), html, function(err) {
                 if (err) {console.log(err);}
@@ -35,7 +41,18 @@ var fetch = function() {
   });
 };
 
-setTimeout(fetch, 2000);
+// setTimeout(fetch, 2000);
+
+/*
+
+exports.testFunction = function(){
+  request('http://www.yahoo.com', function(err, res, html) {
+    db.sites.save({name: 'www.yahoo.com', html: html, isScraped: true});
+    // Write the contents of the scrape to /archives/sites (a new file will be created with the url name)
+  });
+}
+
+ */
 
 /********************************* CRONTAB - every minute ********************
 in terminal, run crontab -e
